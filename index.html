@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Меню кафе</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f5; }
+        
+        .header { 
+            background: linear(135deg, #4CAF50, #45a049); 
+            color: white; 
+            padding: 20px 15px; 
+            text-align: center;
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 1000;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .header h1 { 
+            font-size: 20px; 
+            font-weight: 600;
+            margin: 0;
+        }
+        
+        .container { 
+            margin-top: 80px; 
+            margin-bottom: 100px;
+            padding: 0 10px; 
+        }
+        
+        .category { 
+            background: white; 
+            margin: 15px 0; 
+            padding: 0;
+            border-radius: 15px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .category-header {
+            background: #f8f9fa;
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .category-header h2 {
+            margin: 0;
+            font-size: 18px;
+            color: #333;
+        }
+        
+        .dish { 
+            padding: 15px; 
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            border-bottom: 1px solid #f0f0f0;
+            transition: background-color 0.2s;
+        }
+        
+        .dish:last-child { border-bottom: none; }
+        .dish:hover { background: #fafafa; }
+        
+        .dish-info { 
+            flex-grow: 1; 
+            padding-right: 15px;
+        }
+        
+        .dish-name { 
+            font-weight: 600; 
+            margin-bottom: 5px; 
+            color: #333;
+            font-size: 16px;
+        }
+        
+        .dish-desc { 
+            color: #666; 
+            font-size: 14px; 
+            margin-bottom: 8px;
+            line-height: 1.4;
+        }
+        
+        .dish-price { 
+            color: #4CAF50; 
+            font-weight: 700; 
+            font-size: 16px;
+        }
+        
+        .add-btn { 
+            background: #4CAF50; 
+            color: white; 
+            border: none; 
+            padding: 10px 20px; 
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.2s;
+            min-width: 80px;
+        }
+        
+        .add-btn:hover { 
+            background: #45a049; 
+            transform: translateY(-1px);
+        }
+        
+        .add-btn:active { 
+            transform: translateY(0);
+        }
+        
+        .cart { 
+            position: fixed; 
+            bottom: 0; 
+            width: 100%; 
+            background: white; 
+            padding: 15px 20px;
+            box-shadow: 0 -2px 15px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid #eee;
+        }
+        
+        .cart-info { 
+            flex-grow: 1; 
+        }
+        
+        .cart-count { 
+            font-weight: 600; 
+            color: #333;
+            margin-bottom: 3px;
+        }
+        
+        .cart-total { 
+            font-weight: 700; 
+            color: #4CAF50;
+            font-size: 16px;
+        }
+        
+        .checkout-btn { 
+            background: #FF6B35; 
+            color: white; 
+            border: none; 
+            padding: 12px 25px; 
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 15px;
+            transition: all 0.2s;
+            min-width: 120px;
+        }
+        
+        .checkout-btn:hover { 
+            background: #e55a2b; 
+            transform: translateY(-1px);
+        }
+        
+        .checkout-btn:disabled { 
+            background: #ccc; 
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .loading { 
+            text-align: center; 
+            padding: 60px 20px; 
+            color: #666; 
+            font-size: 16px;
+        }
+        
+        .error { 
+            text-align: center; 
+            padding: 60px 20px; 
+            color: #e74c3c; 
+            font-size: 16px;
+            background: white;
+            margin: 15px;
+            border-radius: 15px;
+        }
+        
+        .empty-category {
+            text-align: center; 
+            color: #999; 
+            padding: 30px 20px;
+            font-style: italic;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .category {
+            animation: fadeIn 0.3s ease-out;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🍕 Наше меню</h1>
+    </div>
+    
+    <div class="container" id="menu">
+        <div class="loading">🔄 Загружаем меню...</div>
+    </div>
+    
+    <div class="cart" id="cart" style="display: none;">
+        <div class="cart-info">
+            <div class="cart-count">🛒 <span id="cart-count">0</span> товаров</div>
+            <div class="cart-total">💰 <span id="cart-total">0</span> сум</div>
+        </div>
+        <button class="checkout-btn" onclick="checkout()" id="checkout-btn">Оформить</button>
+    </div>
+
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script>
+        let cart = [];
+        let tg = window.Telegram.WebApp;
+        
+        // Инициализация Telegram Mini App
+        tg.expand();
+        tg.enableClosingConfirmation();
+        tg.setHeaderColor('#4CAF50');
+        tg.setBackgroundColor('#f5f5f5');
+        
+        // Загрузка меню
+        async function loadMenu() {
+            try {
+                const response = await fetch('http://localhost:8080/api/menu');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const menu = await response.json();
+                renderMenu(menu);
+            } catch (error) {
+                console.error('Ошибка загрузки меню:', error);
+                document.getElementById('menu').innerHTML = 
+                    '<div class="error">❌ Ошибка загрузки меню<br><small>Проверьте, запущен ли бот</small></div>';
+            }
+        }
+        
+        function renderMenu(menu) {
+            const container = document.getElementById('menu');
+            
+            if (!menu.categories || menu.categories.length === 0) {
+                container.innerHTML = '<div class="error">😕 Меню пока пустое</div>';
+                return;
+            }
+            
+            let html = '';
+            
+            menu.categories.forEach(category => {
+                html += `
+                <div class="category">
+                    <div class="category-header">
+                        <h2>${category.emoji} ${category.name}</h2>
+                    </div>
+                    <div class="dishes">
+                `;
+                
+                const categoryDishes = menu.dishes.filter(dish => dish.category === category.name);
+                
+                if (categoryDishes.length === 0) {
+                    html += `<div class="empty-category">Пока нет блюд в этой категории</div>`;
+                } else {
+                    categoryDishes.forEach(dish => {
+                        html += `
+                        <div class="dish">
+                            <div class="dish-info">
+                                <div class="dish-name">${dish.name}</div>
+                                <div class="dish-desc">${dish.description}</div>
+                                <div class="dish-price">${dish.price} сум</div>
+                            </div>
+                            <button class="add-btn" onclick="addToCart(${dish.id}, '${escapeString(dish.name)}', ${dish.price})">
+                                Добавить
+                            </button>
+                        </div>`;
+                    });
+                }
+                
+                html += `</div></div>`;
+            });
+            
+            container.innerHTML = html;
+        }
+        
+        function escapeString(str) {
+            return str.replace(/'/g, "\\'").replace(/"/g, '\\"');
+        }
+        
+        function addToCart(id, name, price) {
+            cart.push({id, name, price});
+            updateCart();
+            
+            // Вибрация при добавлении (если доступно)
+            if (tg.HapticFeedback) {
+                tg.HapticFeedback.impactOccurred('light');
+            }
+            
+            // Анимация кнопки
+            const button = event.target;
+            button.textContent = '✅ Добавлено';
+            button.style.background = '#28a745';
+            setTimeout(() => {
+                button.textContent = 'Добавить';
+                button.style.background = '#4CAF50';
+            }, 1000);
+        }
+        
+        function updateCart() {
+            const cartCount = cart.length;
+            const cartTotal = cart.reduce((sum, item) => sum + item.price, 0);
+            
+            document.getElementById('cart-count').textContent = cartCount;
+            document.getElementById('cart-total').textContent = cartTotal;
+            
+            const cartElement = document.getElementById('cart');
+            const checkoutBtn = document.getElementById('checkout-btn');
+            
+            if (cartCount > 0) {
+                cartElement.style.display = 'flex';
+                checkoutBtn.disabled = false;
+            } else {
+                cartElement.style.display = 'none';
+                checkoutBtn.disabled = true;
+            }
+        }
+        
+        function checkout() {
+            if (cart.length === 0) return;
+            
+            const total = cart.reduce((sum, item) => sum + item.price, 0);
+            const message = `Оформить заказ?\n\nТоваров: ${cart.length}\nОбщая сумма: ${total} сум\n\nВернитесь в бота для завершения оформления.`;
+            
+            if (confirm(message)) {
+                // Отправляем данные в бота
+                tg.sendData(JSON.stringify({
+                    action: 'mini_app_order',
+                    items: cart,
+                    total: total,
+                    timestamp: new Date().toISOString()
+                }));
+                
+                alert('✅ Заказ отправлен!\n\nВернитесь в бота чтобы указать адрес и контактные данные.');
+                tg.close();
+            }
+        }
+        
+        // Загружаем меню при старте
+        document.addEventListener('DOMContentLoaded', loadMenu);
+    </script>
+</body>
+</html>
