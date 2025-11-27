@@ -274,7 +274,7 @@
 
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script>
-        let cart = [];
+        
         let tg = window.Telegram.WebApp;
         
         // Инициализация Telegram Mini App
@@ -339,6 +339,12 @@
             const cartElement = document.getElementById('cart');
             if (cartElement) {
                 cartElement.style.display = totalItems > 0 ? 'flex' : 'none';
+            }
+
+            // Также обновляем кнопку оформления заказа
+            const checkoutBtn = document.getElementById('checkout-btn');
+            if (checkoutBtn) {
+                checkoutBtn.disabled = totalItems === 0;
             }
         }
 
@@ -407,43 +413,7 @@
             return str.replace(/'/g, "\\'").replace(/"/g, '\\"');
         }
         
-        function addToCart(id, name, price) {
-            cart.push({id, name, price});
-            updateCart();
-            
-            // Вибрация при добавлении (если доступно)
-            if (tg.HapticFeedback) {
-                tg.HapticFeedback.impactOccurred('light');
-            }
-            
-            // Анимация кнопки
-            const button = event.target;
-            button.textContent = '✅ Добавлено';
-            button.style.background = '#28a745';
-            setTimeout(() => {
-                button.textContent = 'Добавить';
-                button.style.background = '#4CAF50';
-            }, 1000);
-        }
         
-        function updateCart() {
-            const cartCount = cart.length;
-            const cartTotal = cart.reduce((sum, item) => sum + item.price, 0);
-            
-            document.getElementById('cart-count').textContent = cartCount;
-            document.getElementById('cart-total').textContent = cartTotal;
-            
-            const cartElement = document.getElementById('cart');
-            const checkoutBtn = document.getElementById('checkout-btn');
-            
-            if (cartCount > 0) {
-                cartElement.style.display = 'flex';
-                checkoutBtn.disabled = false;
-            } else {
-                cartElement.style.display = 'none';
-                checkoutBtn.disabled = true;
-            }
-        }
         
         function checkout() {
             const items = Object.entries(cartItems)
@@ -486,4 +456,7 @@
     </script>
 </body>
 </html>
+
+
+
 
