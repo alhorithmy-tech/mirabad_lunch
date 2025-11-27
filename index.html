@@ -204,6 +204,46 @@
             padding: 30px 20px;
             font-style: italic;
         }
+
+        /* Стили для счетчика количества */
+        .quantity-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-left: 10px;
+        }
+
+        .qty-btn {
+            width: 30px;
+            height: 30px;
+            border: none;
+            border-radius: 50%;
+            background: #4CAF50;
+            color: white;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .qty-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .qty-btn:not(:disabled):hover {
+            background: #45a049;
+            transform: scale(1.1);
+        }
+
+        .quantity {
+            font-weight: bold;
+            min-width: 20px;
+            text-align: center;
+            font-size: 16px;
+        }
         
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(10px); }
@@ -258,8 +298,60 @@
                     '<div class="error">❌ Ошибка загрузки меню<br><small>Проверьте, запущен ли бот</small></div>';
             }
         }
+
+        // Глобальные переменные для корзины
+        let cartItems = {};
+        let menuData = {}; // Будем хранить данные меню
+
+        // Функции управления количеством
+        function changeQuantity(dishId, change) {
+            if (!cartItems[dishId]) {
+                cartItems[dishId] = 0;
+            }
+    
+            const newQuantity = cartItems[dishId] + change;
+    
+            if (newQuantity >= 0) {
+                cartItems[dishId] = newQuantity;
+                document.getElementById(`qty-${dishId}`).textContent = newQuantity;
+        
+                // Обновляем кнопки
+                const minusBtn = document.querySelector(`#dish-${dishId} .minus`);
+                if (minusBtn) {
+                    minusBtn.disabled = newQuantity === 0;
+                }
+        
+                updateCart();
+            }
+        }
+
+        function updateCart() {
+            const totalItems = Object.values(cartItems).reduce((sum, qty) => sum + qty, 0);
+            const totalAmount = Object.entries(cartItems).reduce((sum, [dishId, qty]) => {
+                const dish = getDishById(parseInt(dishId));
+                return dish ? sum + (dish.price * qty) : sum;
+            }, 0);
+    
+            document.getElementById('cart-count').textContent = totalItems;
+            document.getElementById('cart-total').textContent = totalAmount;
+    
+            // Показываем/скрываем корзину
+            const cartElement = document.getElementById('cart');
+            if (cartElement) {
+                cartElement.style.display = totalItems > 0 ? 'flex' : 'none';
+            }
+        }
+
+        // Вспомогательная функция для поиска блюда по ID
+        function getDishById(dishId) {
+            if (!menuData.dishes) return null;
+            return menuData.dishes.find(d => d.id === dishId);
+        }
         
         function renderMenu(menu) {
+            // Сохраняем данные меню глобально
+            menuData = menu;
+            
             const container = document.getElementById('menu');
             
             if (!menu.categories || menu.categories.length === 0) {
@@ -296,9 +388,11 @@
                                 <div class="dish-desc">${dish.description}</div>
                                 <div class="dish-price">${dish.price} сум</div>
                             </div>
-                            <button class="add-btn" onclick="addToCart(${dish.id}, '${escapeString(dish.name)}', ${dish.price})">
-                                Добавить
-                            </button>
+                            <div class="quantity-controls">
+                                <button class="qty-btn minus" onclick="changeQuantity(${dish.id}, -1)">-</button>
+                                <span class="quantity" id="qty-${dish.id}">0</span>
+                                <button class="qty-btn plus" onclick="changeQuantity(${dish.id}, 1)">+</button>
+                            </div>
                         </div>`;
                     });
                 }
@@ -352,20 +446,36 @@
         }
         
         function checkout() {
-            if (cart.length === 0) return;
-            
-            const total = cart.reduce((sum, item) => sum + item.price, 0);
-            const message = `Оформить заказ?\n\nТоваров: ${cart.length}\nОбщая сумма: ${total} сум\n\nВернитесь в бота для завершения оформления.`;
-            
+            const items = Object.entries(cartItems)
+                .filter(([_, qty]) => qty > 0)
+                .map(([dishId, qty]) => {
+                    const dish = getDishById(parseInt(dishId));
+                    return {
+                        id: dish.id,
+                        name: dish.name,
+                        price: dish.price,
+                        quantity: qty
+                    };
+                });
+
+            if (items.length === 0) {
+                alert('Корзина пуста!');
+                return;
+            }
+
+            const total = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    
+            const message = `Оформить заказ?\n\nТоваров: ${items.length}\nОбщая сумма: ${total} сум\n\nВернитесь в бота для завершения оформления.`;
+    
             if (confirm(message)) {
                 // Отправляем данные в бота
                 tg.sendData(JSON.stringify({
                     action: 'mini_app_order',
-                    items: cart,
+                    items: items,
                     total: total,
                     timestamp: new Date().toISOString()
                 }));
-                
+        
                 alert('✅ Заказ отправлен!\n\nВернитесь в бота чтобы указать адрес и контактные данные.');
                 tg.close();
             }
@@ -376,3 +486,4 @@
     </script>
 </body>
 </html>
+
