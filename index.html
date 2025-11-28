@@ -458,7 +458,7 @@
         // Загрузка меню
         async function loadMenu() {
             try {
-                const response = await fetch('http://localhost:8080/api/menu');
+                const response = await fetch('https://rotiferal-unacclivitously-angelia.ngrok-free.dev/api/menu');
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
@@ -688,7 +688,7 @@
                 console.log("🔄 Отправляем заказ на сервер...");
 
                 // Отправляем заказ на сервер
-                const response = await fetch('http://localhost:8080/api/order', {
+                const response = await fetch('https://rotiferal-unacclivitously-angelia.ngrok-free.dev/api/order', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -732,6 +732,7 @@
 </body>
 
 </html>
+
 
 
 
